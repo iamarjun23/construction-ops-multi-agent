@@ -52,14 +52,14 @@ export async function runPlainRag(question: string, projectId: string, topK = 5)
     .join('\n\n---\n\n');
 
   const llm = getLLMProvider();
-  const answer = await llm.generate({
+  const { text } = await llm.generate({
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: `Context:\n${context}\n\nQuestion: ${question}` }],
     maxTokens: 1024,
   });
 
   return {
-    answer,
+    answer: text ?? '(no answer generated)',
     retrievedChunks: rows.map((r) => ({
       id: r.id,
       content: r.content,

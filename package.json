@@ -11,6 +11,8 @@
     "db:seed": "tsx src/db/seed.ts",
     "ingest:contracts": "tsx src/ingestion/ingest-contracts.ts",
     "rag:plain": "tsx src/rag/plain-rag.ts",
+    "agents:single": "tsx src/rag/single-agent-baseline.ts",
+    "agents:supervisor": "tsx src/supervisor/run.ts",
     "setup": "npm run db:migrate && npm run db:seed && npm run ingest:contracts"
   },
   "dependencies": {
