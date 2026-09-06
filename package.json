@@ -1,0 +1,28 @@
+{
+  "name": "construction-ops-multi-agent",
+  "version": "0.1.0",
+  "description": "Supervisor-based multi-agent RAG for construction payment/contract/progress questions",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts",
+    "ingest:contracts": "tsx src/ingestion/ingest-contracts.ts",
+    "rag:plain": "tsx src/rag/plain-rag.ts",
+    "setup": "npm run db:migrate && npm run db:seed && npm run ingest:contracts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.68.0",
+    "dotenv": "^16.4.5",
+    "openai": "^4.77.0",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

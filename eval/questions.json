@@ -1,0 +1,55 @@
+{
+  "_comment": "Flagship question (SPEC.md §3) with expected evidence, written down before any agent code exists (Phase 1 requirement). The full 60-100 question eval set is built in Phase 5; this file seeds it.",
+  "flagship": {
+    "id": "flagship-zone3-drywall",
+    "project": "Riverside Tower",
+    "phrasings": [
+      "Is the Zone 3 contractor owed payment for the drywall milestone, and according to the contract, can the client withhold payment because inspection photos are missing?",
+      "Does Meridian Development owe money for the Zone 3 drywall work, and is it allowed to hold back payment since there are no inspection photos?",
+      "Zone 3 drywall — has the contractor been paid, and does the contract let the client withhold payment over missing inspection photos?",
+      "What's the payment status on the Zone 3 drywall milestone, and does Article 4.2 permit withholding it given the missing photos?",
+      "Can the client legally refuse to pay for Zone 3 drywall right now, or is that payment actually owed?",
+      "For the drywall milestone in Zone 3, is payment due, and what does the contract say about withholding it for missing inspection evidence?"
+    ],
+    "expected_evidence": {
+      "payment": {
+        "source": "milestones + payments tables",
+        "facts": [
+          "Zone 3 (Riverside Tower) Drywall milestone: amount_due = 42000.00, status = 'completed'",
+          "No row in payments for this milestone — amount_paid effectively $0",
+          "Contractor is owed the full $42,000.00 milestone amount"
+        ]
+      },
+      "contract": {
+        "source": "doc_chunks — Riverside Tower Master Construction Contract",
+        "facts": [
+          "Article 4.2: for concealment milestones including Drywall, the Contractor must submit date-stamped inspection photographs before payment is released",
+          "Article 4.2: the Client MAY withhold payment until photographs are received and accepted",
+          "Article 4.2: withholding is capped at 30 calendar days from the milestone completion date; after that the matter goes to the Article 5 dispute process",
+          "Riverside Tower Inspection & Quality Assurance Policy §3.1 confirms: a milestone completed without accepted photographs shows as 'complete but unpaid'"
+        ]
+      },
+      "progress": {
+        "source": "progress_logs table",
+        "facts": [
+          "Zone 3 Drywall has a progress log entry with has_inspection_photos = false",
+          "Note explicitly states inspection photographs have not been submitted and the client site rep flagged this as outstanding before payment"
+        ]
+      },
+      "expected_answer_shape": [
+        "Payment database: milestone is complete, $42,000 is owed, nothing has been paid.",
+        "Contract: Article 4.2 permits the client to withhold payment for exactly this reason (missing inspection photos on a concealment milestone like Drywall), but only for up to 30 days from completion.",
+        "Progress records: confirm inspection photos are in fact missing for this milestone.",
+        "Uncertainty to surface: whether the 30-day withholding window has already elapsed (depends on the milestone completion date vs. today) — if it has, withholding is no longer permitted under Article 4.2 and the matter should go to the Article 5 dispute process.",
+        "Must not say withholding 'is legally valid' — only that the contract permits it under stated conditions."
+      ]
+    }
+  },
+  "questions": [
+    {
+      "id": "flagship-zone3-drywall",
+      "question": "Is the Zone 3 contractor owed payment for the drywall milestone, and according to the contract, can the client withhold payment because inspection photos are missing?",
+      "project": "Riverside Tower"
+    }
+  ]
+}

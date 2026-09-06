@@ -1,0 +1,45 @@
+RIVERSIDE TOWER — INSPECTION & QUALITY ASSURANCE POLICY
+Referenced by Article 6.1 of the Master Construction Contract.
+
+This dataset is synthetic and generated to reproduce realistic cross-system
+retrieval challenges. It is not derived from any real client engagement.
+
+1. PURPOSE
+
+This policy sets the operational procedure for the inspection photograph
+requirement in Article 4.2 of the Master Construction Contract. It does
+not create obligations beyond those in the Contract; where the two
+conflict, the Contract controls.
+
+2. PHOTOGRAPH SUBMISSION PROCEDURE
+
+2.1 Photographs must be submitted through the project's shared site log
+within five (5) business days of the milestone being marked complete.
+
+2.2 Each submission must include: (a) a date stamp, (b) the zone and
+milestone identifier, and (c) sufficient coverage to verify the concealed
+work meets the Project Schedule specification.
+
+2.3 The project manager reviews submissions within three (3) business days
+of receipt and records the outcome (accepted or rejected) in the
+milestone's record.
+
+3. CONSEQUENCES OF MISSING PHOTOGRAPHS
+
+3.1 A milestone marked complete without accepted inspection photographs
+remains in "payment withheld" status per Article 4.2 of the Contract. The
+project's payment record will show the milestone as complete but unpaid.
+
+3.2 Site supervisors are responsible for flagging missing photographs in
+the daily progress log so the omission is visible to both the Contractor
+and the Client's project manager.
+
+4. ESCALATION
+
+4.1 If photographs remain outstanding for more than twenty (20) calendar
+days after milestone completion, the project manager shall send written
+notice to the Contractor referencing the thirty (30) day limit in Article
+4.2 of the Contract.
+
+4.2 This policy does not authorize indefinite withholding; the Article 4.2
+thirty-day limit governs.
