@@ -7,9 +7,9 @@ and progress questions. Full design in [SPEC.md](./SPEC.md).
 realistic cross-system retrieval challenges. It is not derived from any real
 client engagement.
 
-## Status: Phase 3 (Audit & conflict handling)
+## Status: Phase 4 (Security & observability)
 
-Three of six planned phases done (see SPEC.md §12).
+Four of six planned phases done (see SPEC.md §12).
 
 **Phase 1 — Data & baseline:**
 - Postgres + pgvector schema (`src/db/schema.sql`) matching SPEC.md §7.
@@ -59,8 +59,42 @@ Three of six planned phases done (see SPEC.md §12).
   the Audit Agent, which must flag the false claim as unsupported/
   contradicted.
 
-Not yet built: the chat UI, the dedicated cross-zone security test, trace
-persistence/SSE, and the three-way evaluation. Those are Phases 4–6.
+**Phase 4 — Security & observability:**
+- `tests/access-control.test.ts` (Vitest, `npm test`) — the SPEC.md §9
+  acceptance criterion: automated proof a zone-restricted contractor cannot
+  retrieve another zone's payment/progress data, regardless of how the
+  request is shaped (explicit forbidden zone, no zone filter at all,
+  milestone-name-only, a mismatched `projectId`, or no project access at
+  all). 11 tests, all passing against the seeded DB.
+- Timeout + bounded exponential-backoff retry (`src/lib/retry.ts`) wraps
+  every LLM and embedding API call. Deliberately *not* applied to DB
+  writes — retrying a non-idempotent `INSERT` on a transient failure risks
+  duplicating data — so the DB pool gets a statement timeout instead, no
+  auto-retry.
+- Trace persistence (`src/trace/`): every Supervisor run writes a
+  `query_traces` row and one `trace_steps` row per step (agent, tool,
+  input/output, latency) to Postgres, matching SPEC.md §7. A persistence
+  failure is logged and swallowed — it must never break the user-facing
+  answer.
+- An Express API (`src/api/server.ts`) — `GET /api/ask` streams operational
+  trace events via SSE as the Supervisor runs, then a final `done` event
+  with the answer + evidence. GET (not POST) so the browser's native
+  `EventSource` can consume it directly; every failure path, including
+  access denial, is sent as an SSE event (`ask_error`, not `error`, to
+  avoid colliding with `EventSource`'s own connection-error event) rather
+  than an HTTP error status, since `EventSource` can't read the body of a
+  non-200 response.
+- A minimal React chat + trace UI (`web/`) — question input with flagship-
+  phrasing quick-select buttons, a live trace panel driven by the SSE
+  stream, and an answer/evidence panel. Verified in an actual browser via
+  Playwright: user/project selectors populate from `/api/context`, the
+  zone-restricted-contractor hint renders, and both the success and error
+  paths (SSE `done` / `ask_error`) update the UI correctly with no console
+  errors.
+
+Not yet built: the three-way evaluation (60–100 questions, real metrics,
+`report.md`) and portfolio polish (architecture diagram, demo recording,
+trade-off write-up). Those are Phases 5–6.
 
 ## Provider adapters
 
@@ -93,17 +127,24 @@ npm run agents:single -- "$FLAGSHIP"             # eval condition 2
 npm run agents:supervisor -- "$FLAGSHIP"         # multi-agent (eval condition 3, supervisor + specialists + audit)
 
 npm run eval:audit-demo                          # Audit Agent catching a deliberately false claim
+npm test                                         # §9 access-control test suite (Vitest)
+
+npm run api:dev                                  # API on http://localhost:3000
+cd web && npm install && npm run dev              # chat UI on http://localhost:5173 (proxies /api to :3000)
 ```
 
 Both agent runners accept an optional user name and project name:
 `npm run agents:supervisor -- "question" "Priya Nandakumar" "Riverside Tower"`
 (Priya is seeded as a Zone-3-only contractor — try her against a Zone 1
-question to see the access control in `src/tools/` take effect.)
+question to see the access control in `src/tools/` take effect. The chat
+UI surfaces the same thing: pick her as the user and ask about another
+zone.)
 
 `npm run typecheck` runs the TypeScript compiler with no emit.
 
 ## Repository layout
 
-See SPEC.md §11 for the target structure; the Phase 1–3 pieces
+See SPEC.md §11 for the target structure; the Phase 1–4 pieces
 (`src/db`, `src/llm`, `src/ingestion`, `src/rag`, `src/tools`, `src/agents`,
-`src/supervisor`, `data/contracts`, `eval`) exist so far.
+`src/supervisor`, `src/lib`, `src/trace`, `src/api`, `web`, `tests`,
+`data/contracts`, `eval`) exist so far.

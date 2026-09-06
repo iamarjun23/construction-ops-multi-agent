@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { config } from '../../config.js';
+import { withRetry } from '../../lib/retry.js';
 import type { EmbeddingProvider } from '../embeddings.js';
 
 export class OpenAIEmbeddingProvider implements EmbeddingProvider {
@@ -12,7 +13,10 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
   }
 
   async embed(texts: string[]): Promise<number[][]> {
-    const response = await this.client.embeddings.create({ model: this.model, input: texts });
+    const response = await withRetry(() => this.client.embeddings.create({ model: this.model, input: texts }), {
+      timeoutMs: 30_000,
+      retries: 2,
+    });
     return response.data.map((d) => d.embedding);
   }
 }

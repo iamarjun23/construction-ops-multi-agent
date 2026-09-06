@@ -6,10 +6,22 @@ import type { AgentResult } from '../agents/types.js';
 import { getLLMProvider } from '../llm/index.js';
 import type { LLMProvider, ToolDefinition } from '../llm/provider.js';
 import type { AccessContext, Evidence } from '../tools/types.js';
+import { recordTraceStep } from '../trace/store.js';
 
 export interface TraceEvent {
   agent: string;
   message: string;
+  tool?: string;
+  input?: unknown;
+  output?: unknown;
+  latencyMs?: number;
+}
+
+export interface AnswerQuestionOptions {
+  /** When set, every step is persisted to trace_steps under this query_traces row (SPEC.md §7). */
+  traceId?: string;
+  /** Called synchronously as each step completes — the hook the SSE API streams from. */
+  onStep?: (event: TraceEvent) => void;
 }
 
 export interface SupervisorResult {
@@ -69,6 +81,12 @@ const AGENT_RUNNERS: Record<SpecialistName, (instruction: string, ctx: AccessCon
   'progress-agent': runProgressAgent,
 };
 
+async function timed<T>(fn: () => Promise<T>): Promise<{ result: T; latencyMs: number }> {
+  const start = Date.now();
+  const result = await fn();
+  return { result, latencyMs: Date.now() - start };
+}
+
 async function draftAnswer(
   llm: LLMProvider,
   question: string,
@@ -102,45 +120,84 @@ function describeUnsupported(unsupported: { claim: string; contradiction?: strin
 // specialists, merges findings, sends the draft to Audit, resolves/reports
 // uncertainty, and produces the final cited answer. Audit is bounded to at
 // most one targeted retrieval retry (§4 Audit row) — this never loops.
-export async function answerQuestion(question: string, ctx: AccessContext): Promise<SupervisorResult> {
+export async function answerQuestion(
+  question: string,
+  ctx: AccessContext,
+  options: AnswerQuestionOptions = {},
+): Promise<SupervisorResult> {
   const llm = getLLMProvider();
   const trace: TraceEvent[] = [];
+  let stepIndex = 0;
 
-  const { toolUses } = await llm.generate({
-    system: PLANNER_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: question }],
-    tools: [PLAN_TOOL],
-    toolChoice: { type: 'tool', name: PLAN_TOOL.name },
-    maxTokens: 1024,
-  });
+  const emit = async (event: TraceEvent) => {
+    trace.push(event);
+    options.onStep?.(event);
+    if (options.traceId) {
+      await recordTraceStep(options.traceId, stepIndex++, {
+        agent: event.agent,
+        tool: event.tool,
+        input: event.input,
+        output: event.output,
+        latencyMs: event.latencyMs ?? 0,
+      });
+    }
+  };
 
-  const planCall = toolUses[0];
+  const { result: planResult, latencyMs: planLatency } = await timed(() =>
+    llm.generate({
+      system: PLANNER_SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: question }],
+      tools: [PLAN_TOOL],
+      toolChoice: { type: 'tool', name: PLAN_TOOL.name },
+      maxTokens: 1024,
+    }),
+  );
+
+  const planCall = planResult.toolUses[0];
   const tasks: PlanTask[] = (planCall?.input as { tasks?: PlanTask[] } | undefined)?.tasks ?? [];
-  trace.push({ agent: 'supervisor', message: `question split into ${tasks.length} task(s)` });
+  await emit({
+    agent: 'supervisor',
+    message: `question split into ${tasks.length} task(s)`,
+    tool: 'create_plan',
+    input: { question },
+    output: { tasks },
+    latencyMs: planLatency,
+  });
 
   const results: AgentResult[] = [];
   for (const task of tasks) {
     const runner = AGENT_RUNNERS[task.agent];
     if (!runner) continue;
-    const result = await runner(task.instruction, ctx);
+    const { result, latencyMs } = await timed(() => runner(task.instruction, ctx));
     results.push(result);
-    trace.push({ agent: task.agent, message: result.summary.slice(0, 160) });
+    await emit({
+      agent: task.agent,
+      message: result.summary.slice(0, 160),
+      input: { instruction: task.instruction },
+      output: { summary: result.summary, evidenceCount: result.evidence.length },
+      latencyMs,
+    });
   }
-  trace.push({ agent: 'supervisor', message: `evidence collected from ${results.length} source(s)` });
+  await emit({ agent: 'supervisor', message: `evidence collected from ${results.length} source(s)` });
 
   let answer = await draftAnswer(llm, question, results);
   let evidence = results.flatMap((r) => r.evidence);
   let audit = await runAuditAgent(answer, evidence);
 
   if (audit.unsupportedClaims.length === 0) {
-    trace.push({ agent: 'audit-agent', message: `all claims supported by ${evidence.length} citation(s)` });
-    trace.push({ agent: 'done', message: 'answer finalized' });
+    await emit({
+      agent: 'audit-agent',
+      message: `all claims supported by ${evidence.length} citation(s)`,
+      output: { claims: audit.claims },
+    });
+    await emit({ agent: 'done', message: 'answer finalized' });
     return { answer, evidence, trace };
   }
 
-  trace.push({
+  await emit({
     agent: 'audit-agent',
     message: `claim not fully supported: ${audit.unsupportedClaims[0].claim.slice(0, 120)}`,
+    output: { unsupportedClaims: audit.unsupportedClaims },
   });
 
   // Bounded to exactly one retrieval retry, whatever the number of unsupported claims.
@@ -148,10 +205,16 @@ export async function answerQuestion(question: string, ctx: AccessContext): Prom
     const { agent: retryAgent, instruction } = audit.suggestedRetrieval;
     const runner = AGENT_RUNNERS[retryAgent];
     if (runner) {
-      const retryResult = await runner(instruction, ctx);
+      const { result: retryResult, latencyMs } = await timed(() => runner(instruction, ctx));
       results.push(retryResult);
       evidence = results.flatMap((r) => r.evidence);
-      trace.push({ agent: retryAgent, message: `re-retrieved: ${retryResult.summary.slice(0, 120)}` });
+      await emit({
+        agent: retryAgent,
+        message: `re-retrieved: ${retryResult.summary.slice(0, 120)}`,
+        input: { instruction },
+        output: { summary: retryResult.summary },
+        latencyMs,
+      });
 
       answer = await draftAnswer(llm, question, results);
       audit = await runAuditAgent(answer, evidence);
@@ -159,15 +222,20 @@ export async function answerQuestion(question: string, ctx: AccessContext): Prom
   }
 
   if (audit.unsupportedClaims.length === 0) {
-    trace.push({ agent: 'audit-agent', message: `final claims supported by ${evidence.length} citation(s)` });
+    await emit({
+      agent: 'audit-agent',
+      message: `final claims supported by ${evidence.length} citation(s)`,
+      output: { claims: audit.claims },
+    });
   } else {
-    trace.push({
+    await emit({
       agent: 'audit-agent',
       message: `${audit.unsupportedClaims.length} claim(s) remain unsupported after one retrieval retry — revising to caveat`,
+      output: { unsupportedClaims: audit.unsupportedClaims },
     });
     answer = await draftAnswer(llm, question, results, describeUnsupported(audit.unsupportedClaims));
   }
 
-  trace.push({ agent: 'done', message: 'answer finalized' });
+  await emit({ agent: 'done', message: 'answer finalized' });
   return { answer, evidence, trace };
 }
