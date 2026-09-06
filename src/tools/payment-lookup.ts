@@ -84,6 +84,7 @@ export async function paymentLookup(input: PaymentLookupInput, ctx: AccessContex
     evidence: result.map((r) => ({
       sourceId: r.milestoneId,
       sourceType: 'row',
+      specialist: 'payment',
       content:
         `${r.zoneLabel} — ${r.milestoneName}: status=${r.status}, amount_due=$${r.amountDue.toFixed(2)}, ` +
         `total_paid=$${r.totalPaid.toFixed(2)}, amount_owed=$${r.amountOwed.toFixed(2)}, due_date=${r.dueDate}`,

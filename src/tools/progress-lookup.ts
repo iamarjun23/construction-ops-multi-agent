@@ -72,6 +72,7 @@ export async function progressLookup(input: ProgressLookupInput, ctx: AccessCont
     evidence: result.map((r) => ({
       sourceId: r.id,
       sourceType: 'row',
+      specialist: 'progress',
       content: `${r.zoneLabel}${r.milestoneName ? ' — ' + r.milestoneName : ''} (${r.entryDate}): ${r.note} [inspection photos: ${r.hasInspectionPhotos ? 'yes' : 'no'}]`,
     })),
   };

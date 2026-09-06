@@ -67,6 +67,7 @@ export async function vectorSearch(input: VectorSearchInput, ctx: AccessContext)
     evidence: chunks.map((c) => ({
       sourceId: c.chunkId,
       sourceType: 'chunk',
+      specialist: 'contract',
       content: `(${c.documentTitle}, p.${c.pageNumber}) ${c.content}`,
     })),
   };

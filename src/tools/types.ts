@@ -16,6 +16,8 @@ export interface Evidence {
   sourceId: string;
   sourceType: 'row' | 'chunk';
   content: string;
+  /** Which domain this evidence came from — lets the Phase 5 eval harness measure evidence-source coverage. */
+  specialist: 'payment' | 'contract' | 'progress';
 }
 
 // SPEC.md §8 tool schemas, plus ProgressLookupInput (implied by the Progress

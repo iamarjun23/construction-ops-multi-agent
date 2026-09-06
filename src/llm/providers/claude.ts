@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../../config.js';
 import { withRetry } from '../../lib/retry.js';
+import { recordLLMUsage } from '../usage.js';
 import type { GenerateInput, GenerateResult, LLMProvider } from '../provider.js';
 
 export class ClaudeProvider implements LLMProvider {
@@ -50,6 +51,8 @@ export class ClaudeProvider implements LLMProvider {
         }),
       { timeoutMs: 60_000, retries: 2 },
     );
+
+    recordLLMUsage(response.usage.input_tokens, response.usage.output_tokens);
 
     const result: GenerateResult = { toolUses: [] };
     for (const block of response.content) {

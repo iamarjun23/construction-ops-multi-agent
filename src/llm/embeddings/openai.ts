@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { config } from '../../config.js';
 import { withRetry } from '../../lib/retry.js';
+import { recordEmbeddingUsage } from '../usage.js';
 import type { EmbeddingProvider } from '../embeddings.js';
 
 export class OpenAIEmbeddingProvider implements EmbeddingProvider {
@@ -17,6 +18,7 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
       timeoutMs: 30_000,
       retries: 2,
     });
+    recordEmbeddingUsage(response.usage.total_tokens);
     return response.data.map((d) => d.embedding);
   }
 }

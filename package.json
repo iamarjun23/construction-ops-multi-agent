@@ -14,6 +14,8 @@
     "agents:single": "tsx src/rag/single-agent-baseline.ts",
     "agents:supervisor": "tsx src/supervisor/run.ts",
     "eval:audit-demo": "tsx eval/audit-demo.ts",
+    "eval:generate-questions": "tsx eval/generate-questions.ts",
+    "eval:run": "tsx eval/run-eval.ts",
     "setup": "npm run db:migrate && npm run db:seed && npm run ingest:contracts",
     "test": "vitest run",
     "api:dev": "tsx src/api/server.ts"
