@@ -7,9 +7,9 @@ and progress questions. Full design in [SPEC.md](./SPEC.md).
 realistic cross-system retrieval challenges. It is not derived from any real
 client engagement.
 
-## Status: Phase 2 (Specialist agents)
+## Status: Phase 3 (Audit & conflict handling)
 
-Two of six planned phases done (see SPEC.md §12).
+Three of six planned phases done (see SPEC.md §12).
 
 **Phase 1 — Data & baseline:**
 - Postgres + pgvector schema (`src/db/schema.sql`) matching SPEC.md §7.
@@ -36,16 +36,31 @@ Two of six planned phases done (see SPEC.md §12).
   each a scoped system prompt + one forced tool call, returning evidence
   with source IDs.
 - The Supervisor (`src/supervisor/`) — splits a question into per-agent
-  tasks, delegates, merges evidence, and synthesizes the final cited
-  answer. (Audit — verifying the draft against evidence — is Phase 3, not
-  wired in yet.)
+  tasks, delegates, merges evidence, and drafts an answer.
 - The single-agent baseline (`src/rag/single-agent-baseline.ts`) — eval
   condition 2: one agent, all three tools, a real multi-turn tool-use loop.
   This is the number the multi-agent system has to beat (SPEC.md §6).
 
-Not yet built: audit agent, the chat UI, the dedicated cross-zone security
-test, trace persistence/SSE, and the three-way evaluation. Those are
-Phases 3–6.
+**Phase 3 — Audit & conflict handling:**
+- The Audit Agent (`src/agents/audit-agent.ts`) — extracts every factual
+  claim from the Supervisor's draft, checks each strictly against the
+  collected evidence, and flags unsupported or contradicted claims. It
+  never introduces its own interpretation or new claims — verification
+  only (SPEC.md §4's Supervisor/Audit boundary).
+- Wired into the Supervisor (`src/supervisor/index.ts`): draft → audit →
+  if an unsupported claim has a plausible fix, retry **exactly one**
+  targeted retrieval from the suggested specialist → re-draft → re-audit
+  → if still unsupported, one final revision that caveats or removes the
+  claim rather than looping indefinitely.
+- `eval/audit-demo.ts` (`npm run eval:audit-demo`) demonstrates the
+  acceptance criterion directly: a draft containing one true claim and one
+  deliberately false claim (that the contract permits withholding payment
+  *indefinitely* — Article 4.2 actually caps it at 30 days) is run through
+  the Audit Agent, which must flag the false claim as unsupported/
+  contradicted.
+
+Not yet built: the chat UI, the dedicated cross-zone security test, trace
+persistence/SSE, and the three-way evaluation. Those are Phases 4–6.
 
 ## Provider adapters
 
@@ -75,7 +90,9 @@ npm run setup                 # migrate schema, seed data, ingest + embed contra
 FLAGSHIP="Is the Zone 3 contractor owed payment for the drywall milestone, and according to the contract, can the client withhold payment because inspection photos are missing?"
 npm run rag:plain -- "$FLAGSHIP"                 # eval condition 1
 npm run agents:single -- "$FLAGSHIP"             # eval condition 2
-npm run agents:supervisor -- "$FLAGSHIP"         # multi-agent (eval condition 3, minus Audit until Phase 3)
+npm run agents:supervisor -- "$FLAGSHIP"         # multi-agent (eval condition 3, supervisor + specialists + audit)
+
+npm run eval:audit-demo                          # Audit Agent catching a deliberately false claim
 ```
 
 Both agent runners accept an optional user name and project name:
@@ -87,6 +104,6 @@ question to see the access control in `src/tools/` take effect.)
 
 ## Repository layout
 
-See SPEC.md §11 for the target structure; the Phase 1–2 pieces
+See SPEC.md §11 for the target structure; the Phase 1–3 pieces
 (`src/db`, `src/llm`, `src/ingestion`, `src/rag`, `src/tools`, `src/agents`,
 `src/supervisor`, `data/contracts`, `eval`) exist so far.

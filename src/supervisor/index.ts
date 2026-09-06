@@ -1,9 +1,10 @@
-import { getLLMProvider } from '../llm/index.js';
-import type { ToolDefinition } from '../llm/provider.js';
+import { runAuditAgent } from '../agents/audit-agent.js';
 import { runContractAgent } from '../agents/contract-agent.js';
 import { runPaymentAgent } from '../agents/payment-agent.js';
 import { runProgressAgent } from '../agents/progress-agent.js';
 import type { AgentResult } from '../agents/types.js';
+import { getLLMProvider } from '../llm/index.js';
+import type { LLMProvider, ToolDefinition } from '../llm/provider.js';
 import type { AccessContext, Evidence } from '../tools/types.js';
 
 export interface TraceEvent {
@@ -53,13 +54,14 @@ const PLANNER_SYSTEM_PROMPT =
   'A compound question (e.g. asking about payment AND a contract condition) needs one task per ' +
   'relevant agent. Always call create_plan.';
 
-const FINAL_SYSTEM_PROMPT =
-  'You are the Supervisor for a construction operations assistant, producing the final answer for the ' +
-  'user from evidence collected by specialist agents (payment records, contract clauses, progress ' +
-  'logs). Distinguish clearly what the payment database says, what the contract permits, what the ' +
-  'progress records show, and what remains uncertain. Cite evidence. Never state that withholding ' +
-  'payment or any other action "is legally valid" — only report what the contract states. If evidence ' +
-  'is missing or conflicting, say so rather than guessing.';
+const DRAFT_SYSTEM_PROMPT =
+  'You are the Supervisor for a construction operations assistant, drafting an answer from evidence ' +
+  'collected by specialist agents (payment records, contract clauses, progress logs). Distinguish ' +
+  'clearly what the payment database says, what the contract permits, what the progress records show, ' +
+  'and what remains uncertain. Cite evidence. Never state that withholding payment or any other action ' +
+  '"is legally valid" — only report what the contract states. If evidence is missing or conflicting, ' +
+  'say so rather than guessing. If you are given audit feedback on a previous draft, revise it: remove ' +
+  'or properly caveat anything flagged as unsupported.';
 
 const AGENT_RUNNERS: Record<SpecialistName, (instruction: string, ctx: AccessContext) => Promise<AgentResult>> = {
   'payment-agent': runPaymentAgent,
@@ -67,10 +69,39 @@ const AGENT_RUNNERS: Record<SpecialistName, (instruction: string, ctx: AccessCon
   'progress-agent': runProgressAgent,
 };
 
+async function draftAnswer(
+  llm: LLMProvider,
+  question: string,
+  results: AgentResult[],
+  auditFeedback?: string,
+): Promise<string> {
+  const evidenceBlock = results.map((r, i) => `[${r.agent} — task ${i + 1}]\n${r.summary}`).join('\n\n---\n\n');
+  const feedback = auditFeedback
+    ? `\n\nAudit feedback on your previous draft — revise accordingly:\n${auditFeedback}`
+    : '';
+  const { text } = await llm.generate({
+    system: DRAFT_SYSTEM_PROMPT,
+    messages: [
+      {
+        role: 'user',
+        content: `Original question: ${question}\n\nEvidence collected by specialist agents:\n\n${evidenceBlock}${feedback}`,
+      },
+    ],
+    maxTokens: 1500,
+  });
+  return text ?? '(no answer generated)';
+}
+
+function describeUnsupported(unsupported: { claim: string; contradiction?: string }[]): string {
+  return unsupported
+    .map((c) => `- "${c.claim}"${c.contradiction ? ` — contradicted: ${c.contradiction}` : ' — not supported by evidence'}`)
+    .join('\n');
+}
+
 // SPEC.md §4: Supervisor splits compound questions into tasks, delegates to
-// specialists, merges findings, and produces the final cited answer. Audit
-// (verifying the draft against evidence, one bounded retry) is Phase 3 —
-// not wired in yet.
+// specialists, merges findings, sends the draft to Audit, resolves/reports
+// uncertainty, and produces the final cited answer. Audit is bounded to at
+// most one targeted retrieval retry (§4 Audit row) — this never loops.
 export async function answerQuestion(question: string, ctx: AccessContext): Promise<SupervisorResult> {
   const llm = getLLMProvider();
   const trace: TraceEvent[] = [];
@@ -95,27 +126,48 @@ export async function answerQuestion(question: string, ctx: AccessContext): Prom
     results.push(result);
     trace.push({ agent: task.agent, message: result.summary.slice(0, 160) });
   }
-
   trace.push({ agent: 'supervisor', message: `evidence collected from ${results.length} source(s)` });
 
-  const evidenceBlock = results.map((r, i) => `[${r.agent} — task ${i + 1}]\n${r.summary}`).join('\n\n---\n\n');
+  let answer = await draftAnswer(llm, question, results);
+  let evidence = results.flatMap((r) => r.evidence);
+  let audit = await runAuditAgent(answer, evidence);
 
-  const { text } = await llm.generate({
-    system: FINAL_SYSTEM_PROMPT,
-    messages: [
-      {
-        role: 'user',
-        content: `Original question: ${question}\n\nEvidence collected by specialist agents:\n\n${evidenceBlock}`,
-      },
-    ],
-    maxTokens: 1500,
+  if (audit.unsupportedClaims.length === 0) {
+    trace.push({ agent: 'audit-agent', message: `all claims supported by ${evidence.length} citation(s)` });
+    trace.push({ agent: 'done', message: 'answer finalized' });
+    return { answer, evidence, trace };
+  }
+
+  trace.push({
+    agent: 'audit-agent',
+    message: `claim not fully supported: ${audit.unsupportedClaims[0].claim.slice(0, 120)}`,
   });
 
-  trace.push({ agent: 'done', message: 'answer finalized' });
+  // Bounded to exactly one retrieval retry, whatever the number of unsupported claims.
+  if (audit.suggestedRetrieval) {
+    const { agent: retryAgent, instruction } = audit.suggestedRetrieval;
+    const runner = AGENT_RUNNERS[retryAgent];
+    if (runner) {
+      const retryResult = await runner(instruction, ctx);
+      results.push(retryResult);
+      evidence = results.flatMap((r) => r.evidence);
+      trace.push({ agent: retryAgent, message: `re-retrieved: ${retryResult.summary.slice(0, 120)}` });
 
-  return {
-    answer: text ?? '(no answer generated)',
-    evidence: results.flatMap((r) => r.evidence),
-    trace,
-  };
+      answer = await draftAnswer(llm, question, results);
+      audit = await runAuditAgent(answer, evidence);
+    }
+  }
+
+  if (audit.unsupportedClaims.length === 0) {
+    trace.push({ agent: 'audit-agent', message: `final claims supported by ${evidence.length} citation(s)` });
+  } else {
+    trace.push({
+      agent: 'audit-agent',
+      message: `${audit.unsupportedClaims.length} claim(s) remain unsupported after one retrieval retry — revising to caveat`,
+    });
+    answer = await draftAnswer(llm, question, results, describeUnsupported(audit.unsupportedClaims));
+  }
+
+  trace.push({ agent: 'done', message: 'answer finalized' });
+  return { answer, evidence, trace };
 }
