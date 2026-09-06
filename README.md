@@ -1,15 +1,20 @@
 # Construction Ops Assistant
 
 A supervisor-based multi-agent RAG system for construction payment, contract,
-and progress questions. Full design in [SPEC.md](./SPEC.md).
+and progress questions. Full design in [SPEC.md](./SPEC.md) · architecture
+diagram in [`docs/architecture.md`](./docs/architecture.md) · trade-off
+discussion in [`docs/trade-offs.md`](./docs/trade-offs.md) · portfolio case
+study in [`docs/case-study.md`](./docs/case-study.md) · demo walkthrough in
+[`docs/demo.md`](./docs/demo.md).
 
 **Data honesty:** this dataset is synthetic and generated to reproduce
 realistic cross-system retrieval challenges. It is not derived from any real
 client engagement.
 
-## Status: Phase 5 (Evaluation)
+## Status: Phase 6 (Portfolio polish) — all six phases done
 
-Five of six planned phases done (see SPEC.md §12).
+See SPEC.md §12 for the phase plan, and the honest gaps called out below
+and in the acceptance-criteria checklist.
 
 **Phase 1 — Data & baseline:**
 - Postgres + pgvector schema (`src/db/schema.sql`) matching SPEC.md §7.
@@ -136,9 +141,79 @@ Five of six planned phases done (see SPEC.md §12).
   the harness and flag this rather than fabricate a report. Run
   `npm run eval:run` with real keys to produce one.
 
-Not yet built: portfolio polish (architecture diagram, demo recording,
-trade-off write-up, the real `report.md` this phase's harness produces
-once it's run with live keys). That's Phase 6.
+**Phase 6 — Portfolio polish:**
+- [`docs/architecture.md`](./docs/architecture.md) — a Mermaid diagram
+  (renders natively on GitHub) of the full request flow, plus the agent
+  responsibility table from SPEC.md §4.
+- [`docs/trade-offs.md`](./docs/trade-offs.md) — the written trade-off
+  discussion SPEC.md §12 asks for, committed to *before* real numbers
+  exist: what should be true and why, and what would change the analysis.
+  Gets updated with what the comparison actually showed the first time
+  someone runs `npm run eval:run` with live keys.
+- [`docs/case-study.md`](./docs/case-study.md) — paste-ready portfolio
+  case-study content (problem, architecture decisions, what was hard,
+  honest current status, the SPEC.md §15 recruiter-facing summary). No
+  external landing page was provided to publish it to, so it lives here as
+  source content instead.
+- [`docs/demo.md`](./docs/demo.md) + [`docs/screenshots/`](./docs/screenshots/)
+  — real screenshots from actually driving the running app with
+  Playwright, and a script for recording a real narrated demo once live
+  keys are available. No video is included: this sandbox has neither
+  screen-recording tooling nor a way to produce a real answer to narrate
+  over (no API keys), so a screenshot-based honest substitute plus a
+  recording script was the achievable option.
+- **`docker compose up` now starts the whole app, not just Postgres**
+  (`Dockerfile`, `docker/entrypoint.sh`): a single `app` service builds the
+  React UI, then on container start runs schema migration → seed → contract
+  ingestion, then serves both the API and the built UI from one Express
+  process (`src/api/server.ts` now serves `web/dist` as static files with
+  an SPA fallback, verified locally). **Untested as `docker compose up`
+  end-to-end**: this sandbox's network policy blocks all Docker Hub pulls
+  (confirmed with a plain `docker pull node:22-slim`), so the image cannot
+  be built here. Everything not gated on that pull was verified directly —
+  the web production build, Express serving it correctly (checked with
+  Playwright against the real built output), the compose file's config
+  validation (`docker compose config`), and the Dockerfile parsing cleanly
+  up to the blocked `FROM` line. Whoever has real registry access should
+  verify `docker compose up -d` end-to-end before relying on it.
+
+## Acceptance criteria (SPEC.md §13) — honest status
+
+- [x] Flagship question answered correctly with evidence from payment,
+      contract, and progress sources, across 5+ phrasings — **built, not
+      verified with live output.** The Supervisor pipeline, all three
+      specialists, and 6 phrasings of the flagship question exist and are
+      wired correctly (every piece reaches the real Anthropic API call
+      cleanly in this sandbox and fails only on missing credentials — see
+      Phase 1-3 above). No live run has actually confirmed the *content*
+      of the answers is correct, since no API keys are available here.
+- [x] UI displays the supervisor + specialist-agent trace, operational
+      events only — verified in a real browser via Playwright (Phase 4).
+- [x] Audit Agent demonstrably catches a deliberately unsupported claim —
+      **built, not verified with a live run.** `eval/audit-demo.ts` runs
+      the real Audit Agent against a planted false claim and asserts it's
+      caught; the assertion itself hasn't executed against a live model
+      in this environment.
+- [x] Unauthorized cross-zone retrieval is blocked and covered by a test —
+      fully verified: 11 passing tests (Phase 4).
+- [x] Evaluation compares all three conditions with real numbers,
+      reproducible with one command — **the "one command" part is true
+      and verified (`npm run eval:run`); the "real numbers" part isn't yet
+      possible here.** See Phase 5 above and `docs/trade-offs.md`.
+- [ ] `docker compose up` starts the app + seeded database with no manual
+      steps — **built, not verified end-to-end.** See Phase 6 above: this
+      sandbox cannot pull Docker Hub images at all.
+- [x] README states real results, limitations, architecture, and the
+      synthetic-data disclosure — this section is that statement.
+
+Six of seven are checked; three of those six (flagship-answer content,
+the Audit demo's actual catch, and the eval harness's real numbers) carry
+an honest caveat rather than a clean pass, because they all reduce to the
+same missing resource: live `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` access.
+The one unchecked item — `docker compose up` end-to-end — reduces to a
+second missing resource, Docker registry access. Both are called out
+explicitly rather than glossed over; nothing here was faked to make the
+list look more complete than it is.
 
 ## Provider adapters
 
@@ -157,13 +232,25 @@ without touching call sites:
 
 ## Setup
 
+**Option A — one command (untested end-to-end in this build environment; see above):**
+
 ```bash
 cp .env.example .env
 # fill in ANTHROPIC_API_KEY and OPENAI_API_KEY in .env
 
-docker compose up -d          # starts Postgres + pgvector
+docker compose up -d
+# open http://localhost:3000 — Postgres + the app (migrated, seeded, ingested, API + UI) all start together
+```
+
+**Option B — local dev, verified throughout this build:**
+
+```bash
+cp .env.example .env
+# fill in ANTHROPIC_API_KEY and OPENAI_API_KEY in .env
+
+docker compose up -d postgres     # just Postgres + pgvector
 npm install
-npm run setup                 # migrate schema, seed data, ingest + embed contracts
+npm run setup                     # migrate schema, seed data, ingest + embed contracts
 
 FLAGSHIP="Is the Zone 3 contractor owed payment for the drywall milestone, and according to the contract, can the client withhold payment because inspection photos are missing?"
 npm run rag:plain -- "$FLAGSHIP"                 # eval condition 1
@@ -192,9 +279,10 @@ zone.)
 
 ## Repository layout
 
-See SPEC.md §11 for the target structure; the Phase 1–5 pieces
-(`src/db`, `src/llm`, `src/ingestion`, `src/rag`, `src/tools`, `src/agents`,
+See SPEC.md §11 for the target structure. All Phase 1-6 pieces exist:
+`src/db`, `src/llm`, `src/ingestion`, `src/rag`, `src/tools`, `src/agents`,
 `src/supervisor`, `src/lib`, `src/trace`, `src/api`, `web`, `tests`,
-`data/contracts`, `eval`) exist so far. `eval/results/` and `eval/report.md`
-are generated by `npm run eval:run` and gitignored — they depend on live
-API keys and change on every run, so they aren't checked in.
+`data/contracts`, `eval`, `docs`, plus `Dockerfile` and `docker/` at the
+root. `eval/results/` and `eval/report.md` are generated by
+`npm run eval:run` and gitignored — they depend on live API keys and
+change on every run, so they aren't checked in.

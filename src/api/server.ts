@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import express from 'express';
 import { pool } from '../db/pool.js';
@@ -5,6 +8,12 @@ import { answerQuestion } from '../supervisor/index.js';
 import { loadAccessContext } from '../tools/access.js';
 import { AccessDeniedError } from '../tools/types.js';
 import { createQueryTrace } from '../trace/store.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Present only in the Docker image (web/dist is built and copied in during
+// the image build — see Dockerfile). In local dev, the Vite dev server
+// serves the UI directly and proxies /api to this server instead.
+const WEB_DIST = path.join(__dirname, '../../web/dist');
 
 const app = express();
 app.use(cors());
@@ -76,6 +85,15 @@ app.get('/api/ask', async (req, res) => {
     res.end();
   }
 });
+
+if (existsSync(WEB_DIST)) {
+  app.use(express.static(WEB_DIST));
+  // SPA fallback for any non-API GET route — must come after express.static
+  // (which already served real asset files) and after the /api routes above.
+  app.get(/^(?!\/api).*/, (_req, res) => {
+    res.sendFile(path.join(WEB_DIST, 'index.html'));
+  });
+}
 
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);

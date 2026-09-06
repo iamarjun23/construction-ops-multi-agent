@@ -16,5 +16,20 @@ services:
       timeout: 5s
       retries: 10
 
+  app:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Overrides .env's DATABASE_URL: inside the compose network the DB is
+      # reached by service name, not localhost.
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/construction_ops
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:
