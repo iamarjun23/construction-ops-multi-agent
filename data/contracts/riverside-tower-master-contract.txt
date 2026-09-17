@@ -1,0 +1,92 @@
+MASTER CONSTRUCTION CONTRACT
+Project: Riverside Tower
+Client: Meridian Development
+Contractor: Meridian Development (General Contractor of Record)
+
+This dataset is synthetic and generated to reproduce realistic cross-system
+retrieval challenges. It is not derived from any real client engagement or
+executed legal instrument.
+
+ARTICLE 1 — SCOPE OF WORK
+
+1.1 The Contractor shall furnish all labor, materials, equipment, and
+supervision necessary to complete the construction work described in the
+Project Schedule for Riverside Tower, organized by zone (Zone 1 through
+Zone 4) and by milestone within each zone.
+
+1.2 Each zone's milestones follow the standard sequence: Sitework &
+Excavation, Framing, Drywall, Electrical Rough-in, Plumbing Rough-in, and
+Final Finish. Milestones must be completed in sequence within a zone unless
+the Client's project manager approves an exception in writing.
+
+ARTICLE 2 — CONTRACT SUM AND SCHEDULE OF VALUES
+
+2.1 The Client shall pay the Contractor the amounts set forth in the
+Schedule of Values for each milestone, subject to the conditions of this
+Article and Article 4.
+
+2.2 Payment for a milestone becomes due within fifteen (15) business days
+of the milestone being marked complete, subject to the verification
+requirements in Article 4.
+
+ARTICLE 3 — MILESTONE COMPLETION
+
+3.1 A milestone is considered complete when the Contractor's site
+supervisor certifies in the daily progress log that all work items for
+that milestone have been finished to the specifications in the Project
+Schedule.
+
+3.2 Completion under Section 3.1 establishes the Contractor's entitlement
+to payment under Article 2, subject to Article 4's verification
+conditions. Completion alone does not waive the Client's rights under
+Article 4.
+
+ARTICLE 4 — INSPECTION AND VERIFICATION
+
+4.1 General. The Client's project manager or designated representative may
+inspect completed work at any time. The Contractor shall provide
+reasonable access to the work site for this purpose.
+
+4.2 Inspection Photograph Requirement. For any milestone involving
+work that will be concealed by a subsequent milestone (including, without
+limitation, Drywall, which conceals Electrical Rough-in and Plumbing
+Rough-in), the Contractor shall submit date-stamped inspection
+photographs documenting the completed work to the Client's project
+manager before payment for that milestone is released. The Client may
+withhold payment for the affected milestone until such photographs are
+received and accepted. Withholding under this Section 4.2 shall not
+exceed thirty (30) calendar days from the date the milestone was marked
+complete under Section 3.1; if the Contractor has not cured the
+deficiency within that period, the matter shall be referred to the
+dispute resolution procedure in Article 5.
+
+4.3 Rejection. If inspection photographs submitted under Section 4.2
+reveal non-conforming work, the Client's project manager shall notify the
+Contractor in writing within five (5) business days, specifying the
+deficiency. The milestone shall not be considered complete under Section
+3.1 until the deficiency is cured.
+
+ARTICLE 5 — DISPUTE RESOLUTION
+
+5.1 Any dispute arising from withheld payment, rejected inspection, or
+disagreement over milestone completion shall first be addressed through a
+joint meeting of the Client's and Contractor's project managers within ten
+(10) business days of either party's written request.
+
+5.2 If the dispute is not resolved under Section 5.1, either party may
+pursue mediation before initiating any other proceeding. Nothing in this
+Article shall be construed as legal advice or a determination of legal
+validity; it describes the parties' contractual process only.
+
+ARTICLE 6 — GENERAL PROVISIONS
+
+6.1 This Contract, together with the Project Schedule and the Inspection
+& Quality Assurance Policy referenced herein, constitutes the entire
+agreement between the parties regarding the Riverside Tower project.
+
+6.2 Amendments to this Contract must be in writing and signed by both
+parties' authorized representatives.
+
+6.3 Retainage of five percent (5%) may be withheld from each milestone
+payment per the Company-Wide Payment Terms & Retainage Policy, in addition
+to any withholding under Section 4.2.

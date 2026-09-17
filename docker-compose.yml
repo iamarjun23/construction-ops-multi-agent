@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: construction_ops
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Overrides .env's DATABASE_URL: inside the compose network the DB is
+      # reached by service name, not localhost.
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/construction_ops
+      # Overrides .env's OLLAMA_BASE_URL when LLM_PROVIDER/EMBEDDING_PROVIDER
+      # is "ollama": the container can't reach the host via localhost, but
+      # Docker's host-gateway alias works the same on Docker Desktop and Linux.
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

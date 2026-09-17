@@ -1,0 +1,1216 @@
+{
+  "_comment": "Flagship question (SPEC.md §3) with expected evidence, written down before any agent code exists (Phase 1 requirement). The full 60-100 question eval set is built in Phase 5; this file seeds it.",
+  "flagship": {
+    "id": "flagship-zone3-drywall",
+    "project": "Riverside Tower",
+    "phrasings": [
+      "Is the Zone 3 contractor owed payment for the drywall milestone, and according to the contract, can the client withhold payment because inspection photos are missing?",
+      "Does Meridian Development owe money for the Zone 3 drywall work, and is it allowed to hold back payment since there are no inspection photos?",
+      "Zone 3 drywall — has the contractor been paid, and does the contract let the client withhold payment over missing inspection photos?",
+      "What's the payment status on the Zone 3 drywall milestone, and does Article 4.2 permit withholding it given the missing photos?",
+      "Can the client legally refuse to pay for Zone 3 drywall right now, or is that payment actually owed?",
+      "For the drywall milestone in Zone 3, is payment due, and what does the contract say about withholding it for missing inspection evidence?"
+    ],
+    "expected_evidence": {
+      "payment": {
+        "source": "milestones + payments tables",
+        "facts": [
+          "Zone 3 (Riverside Tower) Drywall milestone: amount_due = 42000.00, status = 'completed'",
+          "No row in payments for this milestone — amount_paid effectively $0",
+          "Contractor is owed the full $42,000.00 milestone amount"
+        ]
+      },
+      "contract": {
+        "source": "doc_chunks — Riverside Tower Master Construction Contract",
+        "facts": [
+          "Article 4.2: for concealment milestones including Drywall, the Contractor must submit date-stamped inspection photographs before payment is released",
+          "Article 4.2: the Client MAY withhold payment until photographs are received and accepted",
+          "Article 4.2: withholding is capped at 30 calendar days from the milestone completion date; after that the matter goes to the Article 5 dispute process",
+          "Riverside Tower Inspection & Quality Assurance Policy §3.1 confirms: a milestone completed without accepted photographs shows as 'complete but unpaid'"
+        ]
+      },
+      "progress": {
+        "source": "progress_logs table",
+        "facts": [
+          "Zone 3 Drywall has a progress log entry with has_inspection_photos = false",
+          "Note explicitly states inspection photographs have not been submitted and the client site rep flagged this as outstanding before payment"
+        ]
+      },
+      "expected_answer_shape": [
+        "Payment database: milestone is complete, $42,000 is owed, nothing has been paid.",
+        "Contract: Article 4.2 permits the client to withhold payment for exactly this reason (missing inspection photos on a concealment milestone like Drywall), but only for up to 30 days from completion.",
+        "Progress records: confirm inspection photos are in fact missing for this milestone.",
+        "Uncertainty to surface: whether the 30-day withholding window has already elapsed (depends on the milestone completion date vs. today) — if it has, withholding is no longer permitted under Article 4.2 and the matter should go to the Article 5 dispute process.",
+        "Must not say withholding 'is legally valid' — only that the contract permits it under stated conditions."
+      ]
+    }
+  },
+  "questions": [
+    {
+      "id": "payment-001",
+      "type": "payment_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "Has the Zone A contractor been paid for Sitework & Excavation?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone A",
+        "milestoneName": "Sitework & Excavation",
+        "amountDue": 38000,
+        "status": "paid",
+        "totalPaid": 38000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-002",
+      "type": "progress_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "Have inspection photos been submitted for Framing in Zone A?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone A",
+        "milestoneName": "Framing",
+        "logCount": 2,
+        "allHaveInspectionPhotos": true,
+        "anyMissingInspectionPhotos": false
+      }
+    },
+    {
+      "id": "payment-003",
+      "type": "payment_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "Has the Zone A contractor been paid for Drywall?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone A",
+        "milestoneName": "Drywall",
+        "amountDue": 42000,
+        "status": "completed",
+        "totalPaid": 16800,
+        "amountOwed": 25200
+      }
+    },
+    {
+      "id": "progress-004",
+      "type": "progress_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "Is there any indication that Electrical Rough-in work in Zone A is behind schedule or incomplete?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone A",
+        "milestoneName": "Electrical Rough-in",
+        "logCount": 3,
+        "allHaveInspectionPhotos": false,
+        "anyMissingInspectionPhotos": true
+      }
+    },
+    {
+      "id": "payment-005",
+      "type": "payment_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "What is the payment status of the Plumbing Rough-in milestone in Zone A?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone A",
+        "milestoneName": "Plumbing Rough-in",
+        "amountDue": 27000,
+        "status": "paid",
+        "totalPaid": 27000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-006",
+      "type": "progress_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "What do the progress logs show for Final Finish in Zone A?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone A",
+        "milestoneName": "Final Finish",
+        "logCount": 2,
+        "allHaveInspectionPhotos": true,
+        "anyMissingInspectionPhotos": false
+      }
+    },
+    {
+      "id": "payment-007",
+      "type": "payment_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "How much is still owed for Sitework & Excavation in Zone B?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone B",
+        "milestoneName": "Sitework & Excavation",
+        "amountDue": 38000,
+        "status": "paid",
+        "totalPaid": 38000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-008",
+      "type": "progress_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "Have inspection photos been submitted for Framing in Zone B?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone B",
+        "milestoneName": "Framing",
+        "logCount": 4,
+        "allHaveInspectionPhotos": true,
+        "anyMissingInspectionPhotos": false
+      }
+    },
+    {
+      "id": "payment-009",
+      "type": "payment_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "Has the Zone B contractor been paid for Drywall?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone B",
+        "milestoneName": "Drywall",
+        "amountDue": 42000,
+        "status": "paid",
+        "totalPaid": 42000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-010",
+      "type": "progress_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "What do the progress logs show for Electrical Rough-in in Zone B?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone B",
+        "milestoneName": "Electrical Rough-in",
+        "logCount": 3,
+        "allHaveInspectionPhotos": false,
+        "anyMissingInspectionPhotos": true
+      }
+    },
+    {
+      "id": "payment-011",
+      "type": "payment_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "Has the Zone B contractor been paid for Plumbing Rough-in?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone B",
+        "milestoneName": "Plumbing Rough-in",
+        "amountDue": 27000,
+        "status": "paid",
+        "totalPaid": 27000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-012",
+      "type": "progress_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "Is there any indication that Final Finish work in Zone B is behind schedule or incomplete?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone B",
+        "milestoneName": "Final Finish",
+        "logCount": 2,
+        "allHaveInspectionPhotos": true,
+        "anyMissingInspectionPhotos": false
+      }
+    },
+    {
+      "id": "payment-013",
+      "type": "payment_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "What is the payment status of the Sitework & Excavation milestone in Zone C?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone C",
+        "milestoneName": "Sitework & Excavation",
+        "amountDue": 38000,
+        "status": "paid",
+        "totalPaid": 38000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-014",
+      "type": "progress_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "Have inspection photos been submitted for Framing in Zone C?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone C",
+        "milestoneName": "Framing",
+        "logCount": 2,
+        "allHaveInspectionPhotos": false,
+        "anyMissingInspectionPhotos": true
+      }
+    },
+    {
+      "id": "payment-015",
+      "type": "payment_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "What is the payment status of the Drywall milestone in Zone C?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone C",
+        "milestoneName": "Drywall",
+        "amountDue": 42000,
+        "status": "paid",
+        "totalPaid": 42000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-016",
+      "type": "progress_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "Is there any indication that Electrical Rough-in work in Zone C is behind schedule or incomplete?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone C",
+        "milestoneName": "Electrical Rough-in",
+        "logCount": 2,
+        "allHaveInspectionPhotos": true,
+        "anyMissingInspectionPhotos": false
+      }
+    },
+    {
+      "id": "payment-017",
+      "type": "payment_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "Is the Plumbing Rough-in milestone in Zone C fully paid?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone C",
+        "milestoneName": "Plumbing Rough-in",
+        "amountDue": 27000,
+        "status": "paid",
+        "totalPaid": 27000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-018",
+      "type": "progress_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "Have inspection photos been submitted for Final Finish in Zone C?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone C",
+        "milestoneName": "Final Finish",
+        "logCount": 2,
+        "allHaveInspectionPhotos": true,
+        "anyMissingInspectionPhotos": false
+      }
+    },
+    {
+      "id": "payment-019",
+      "type": "payment_only",
+      "project": "Riverside Tower",
+      "question": "Is the Sitework & Excavation milestone in Zone 1 fully paid?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 1",
+        "milestoneName": "Sitework & Excavation",
+        "amountDue": 38000,
+        "status": "paid",
+        "totalPaid": 38000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-020",
+      "type": "progress_only",
+      "project": "Riverside Tower",
+      "question": "Have inspection photos been submitted for Framing in Zone 1?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 1",
+        "milestoneName": "Framing",
+        "logCount": 2,
+        "allHaveInspectionPhotos": false,
+        "anyMissingInspectionPhotos": true
+      }
+    },
+    {
+      "id": "payment-021",
+      "type": "payment_only",
+      "project": "Riverside Tower",
+      "question": "Is the Drywall milestone in Zone 1 fully paid?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 1",
+        "milestoneName": "Drywall",
+        "amountDue": 42000,
+        "status": "paid",
+        "totalPaid": 42000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-022",
+      "type": "progress_only",
+      "project": "Riverside Tower",
+      "question": "Is there any indication that Electrical Rough-in work in Zone 1 is behind schedule or incomplete?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 1",
+        "milestoneName": "Electrical Rough-in",
+        "logCount": 2,
+        "allHaveInspectionPhotos": true,
+        "anyMissingInspectionPhotos": false
+      }
+    },
+    {
+      "id": "payment-023",
+      "type": "payment_only",
+      "project": "Riverside Tower",
+      "question": "What is the payment status of the Plumbing Rough-in milestone in Zone 1?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 1",
+        "milestoneName": "Plumbing Rough-in",
+        "amountDue": 27000,
+        "status": "paid",
+        "totalPaid": 27000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-024",
+      "type": "progress_only",
+      "project": "Riverside Tower",
+      "question": "Have inspection photos been submitted for Final Finish in Zone 1?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 1",
+        "milestoneName": "Final Finish",
+        "logCount": 2,
+        "allHaveInspectionPhotos": true,
+        "anyMissingInspectionPhotos": false
+      }
+    },
+    {
+      "id": "payment-025",
+      "type": "payment_only",
+      "project": "Riverside Tower",
+      "question": "How much is still owed for Sitework & Excavation in Zone 2?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 2",
+        "milestoneName": "Sitework & Excavation",
+        "amountDue": 38000,
+        "status": "completed",
+        "totalPaid": 0,
+        "amountOwed": 38000
+      }
+    },
+    {
+      "id": "progress-026",
+      "type": "progress_only",
+      "project": "Riverside Tower",
+      "question": "Is there any indication that Framing work in Zone 2 is behind schedule or incomplete?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 2",
+        "milestoneName": "Framing",
+        "logCount": 2,
+        "allHaveInspectionPhotos": false,
+        "anyMissingInspectionPhotos": true
+      }
+    },
+    {
+      "id": "payment-027",
+      "type": "payment_only",
+      "project": "Riverside Tower",
+      "question": "Has the Zone 2 contractor been paid for Drywall?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 2",
+        "milestoneName": "Drywall",
+        "amountDue": 42000,
+        "status": "paid",
+        "totalPaid": 42000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-028",
+      "type": "progress_only",
+      "project": "Riverside Tower",
+      "question": "Have inspection photos been submitted for Electrical Rough-in in Zone 2?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 2",
+        "milestoneName": "Electrical Rough-in",
+        "logCount": 4,
+        "allHaveInspectionPhotos": false,
+        "anyMissingInspectionPhotos": true
+      }
+    },
+    {
+      "id": "payment-029",
+      "type": "payment_only",
+      "project": "Riverside Tower",
+      "question": "What is the payment status of the Plumbing Rough-in milestone in Zone 2?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 2",
+        "milestoneName": "Plumbing Rough-in",
+        "amountDue": 27000,
+        "status": "paid",
+        "totalPaid": 27000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-030",
+      "type": "progress_only",
+      "project": "Riverside Tower",
+      "question": "What do the progress logs show for Final Finish in Zone 2?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 2",
+        "milestoneName": "Final Finish",
+        "logCount": 4,
+        "allHaveInspectionPhotos": true,
+        "anyMissingInspectionPhotos": false
+      }
+    },
+    {
+      "id": "payment-031",
+      "type": "payment_only",
+      "project": "Riverside Tower",
+      "question": "How much is still owed for Sitework & Excavation in Zone 3?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 3",
+        "milestoneName": "Sitework & Excavation",
+        "amountDue": 38000,
+        "status": "paid",
+        "totalPaid": 38000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-032",
+      "type": "progress_only",
+      "project": "Riverside Tower",
+      "question": "Have inspection photos been submitted for Framing in Zone 3?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 3",
+        "milestoneName": "Framing",
+        "logCount": 2,
+        "allHaveInspectionPhotos": false,
+        "anyMissingInspectionPhotos": true
+      }
+    },
+    {
+      "id": "payment-033",
+      "type": "payment_only",
+      "project": "Riverside Tower",
+      "question": "Is the Drywall milestone in Zone 3 fully paid?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 3",
+        "milestoneName": "Drywall",
+        "amountDue": 42000,
+        "status": "completed",
+        "totalPaid": 0,
+        "amountOwed": 42000
+      }
+    },
+    {
+      "id": "progress-034",
+      "type": "progress_only",
+      "project": "Riverside Tower",
+      "question": "What do the progress logs show for Electrical Rough-in in Zone 3?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 3",
+        "milestoneName": "Electrical Rough-in",
+        "logCount": 2,
+        "allHaveInspectionPhotos": true,
+        "anyMissingInspectionPhotos": false
+      }
+    },
+    {
+      "id": "payment-035",
+      "type": "payment_only",
+      "project": "Riverside Tower",
+      "question": "What is the payment status of the Plumbing Rough-in milestone in Zone 3?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 3",
+        "milestoneName": "Plumbing Rough-in",
+        "amountDue": 27000,
+        "status": "completed",
+        "totalPaid": 0,
+        "amountOwed": 27000
+      }
+    },
+    {
+      "id": "progress-036",
+      "type": "progress_only",
+      "project": "Riverside Tower",
+      "question": "Have inspection photos been submitted for Final Finish in Zone 3?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 3",
+        "milestoneName": "Final Finish",
+        "logCount": 3,
+        "allHaveInspectionPhotos": false,
+        "anyMissingInspectionPhotos": true
+      }
+    },
+    {
+      "id": "payment-037",
+      "type": "payment_only",
+      "project": "Riverside Tower",
+      "question": "How much is still owed for Sitework & Excavation in Zone 4?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 4",
+        "milestoneName": "Sitework & Excavation",
+        "amountDue": 38000,
+        "status": "paid",
+        "totalPaid": 38000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-038",
+      "type": "progress_only",
+      "project": "Riverside Tower",
+      "question": "Have inspection photos been submitted for Framing in Zone 4?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 4",
+        "milestoneName": "Framing",
+        "logCount": 4,
+        "allHaveInspectionPhotos": true,
+        "anyMissingInspectionPhotos": false
+      }
+    },
+    {
+      "id": "payment-039",
+      "type": "payment_only",
+      "project": "Riverside Tower",
+      "question": "Has the Zone 4 contractor been paid for Drywall?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 4",
+        "milestoneName": "Drywall",
+        "amountDue": 42000,
+        "status": "completed",
+        "totalPaid": 16800,
+        "amountOwed": 25200
+      }
+    },
+    {
+      "id": "progress-040",
+      "type": "progress_only",
+      "project": "Riverside Tower",
+      "question": "Is there any indication that Electrical Rough-in work in Zone 4 is behind schedule or incomplete?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 4",
+        "milestoneName": "Electrical Rough-in",
+        "logCount": 3,
+        "allHaveInspectionPhotos": true,
+        "anyMissingInspectionPhotos": false
+      }
+    },
+    {
+      "id": "payment-041",
+      "type": "payment_only",
+      "project": "Riverside Tower",
+      "question": "How much is still owed for Plumbing Rough-in in Zone 4?",
+      "expectedSpecialists": [
+        "payment"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 4",
+        "milestoneName": "Plumbing Rough-in",
+        "amountDue": 27000,
+        "status": "paid",
+        "totalPaid": 27000,
+        "amountOwed": 0
+      }
+    },
+    {
+      "id": "progress-042",
+      "type": "progress_only",
+      "project": "Riverside Tower",
+      "question": "Is there any indication that Final Finish work in Zone 4 is behind schedule or incomplete?",
+      "expectedSpecialists": [
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 4",
+        "milestoneName": "Final Finish",
+        "logCount": 4,
+        "allHaveInspectionPhotos": false,
+        "anyMissingInspectionPhotos": true
+      }
+    },
+    {
+      "id": "contract-043",
+      "type": "contract_only",
+      "project": "Riverside Tower",
+      "question": "What does the Riverside Tower contract say about retainage withheld from milestone payments?",
+      "expectedSpecialists": [
+        "contract"
+      ],
+      "hints": [
+        "5% retainage",
+        "released upon Final Finish milestone acceptance",
+        "Article 6.3"
+      ]
+    },
+    {
+      "id": "contract-044",
+      "type": "contract_only",
+      "project": "Riverside Tower",
+      "question": "How many calendar days can Riverside Tower's client withhold payment for a milestone missing inspection photographs before the dispute process applies?",
+      "expectedSpecialists": [
+        "contract"
+      ],
+      "hints": [
+        "30 calendar days",
+        "Article 4.2",
+        "Article 5 dispute resolution"
+      ]
+    },
+    {
+      "id": "contract-045",
+      "type": "contract_only",
+      "project": "Riverside Tower",
+      "question": "Within how many business days of a milestone being marked complete does payment become due under the Riverside Tower contract?",
+      "expectedSpecialists": [
+        "contract"
+      ],
+      "hints": [
+        "15 business days",
+        "Article 2.2",
+        "subject to Article 4.2 withholding"
+      ]
+    },
+    {
+      "id": "contract-046",
+      "type": "contract_only",
+      "project": "Riverside Tower",
+      "question": "What must the Contractor submit before payment is released for a concealment milestone like Drywall?",
+      "expectedSpecialists": [
+        "contract"
+      ],
+      "hints": [
+        "date-stamped inspection photographs",
+        "Article 4.2"
+      ]
+    },
+    {
+      "id": "contract-047",
+      "type": "contract_only",
+      "project": "Riverside Tower",
+      "question": "What happens if the Contractor's inspection photographs reveal non-conforming work?",
+      "expectedSpecialists": [
+        "contract"
+      ],
+      "hints": [
+        "written notice within five business days",
+        "Article 4.3",
+        "milestone not complete until cured"
+      ]
+    },
+    {
+      "id": "contract-048",
+      "type": "contract_only",
+      "project": "Riverside Tower",
+      "question": "What is the first step in resolving a dispute over withheld payment under the Riverside Tower contract?",
+      "expectedSpecialists": [
+        "contract"
+      ],
+      "hints": [
+        "joint meeting of project managers",
+        "within 10 business days",
+        "Article 5.1"
+      ]
+    },
+    {
+      "id": "contract-049",
+      "type": "contract_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "How many calendar days can Harbor Point's client withhold payment for a milestone missing inspection photographs?",
+      "expectedSpecialists": [
+        "contract"
+      ],
+      "hints": [
+        "45 calendar days",
+        "Article 4.2",
+        "differs from Riverside Tower's 30-day cap"
+      ]
+    },
+    {
+      "id": "contract-050",
+      "type": "contract_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "Within how many business days of milestone completion does payment become due under the Harbor Point contract?",
+      "expectedSpecialists": [
+        "contract"
+      ],
+      "hints": [
+        "20 business days",
+        "Article 2.2"
+      ]
+    },
+    {
+      "id": "contract-051",
+      "type": "contract_only",
+      "project": "Harbor Point Logistics Center",
+      "question": "What retainage percentage applies across all projects per the company-wide payment policy?",
+      "expectedSpecialists": [
+        "contract"
+      ],
+      "hints": [
+        "5% retainage",
+        "company-wide policy"
+      ]
+    },
+    {
+      "id": "contract-052",
+      "type": "contract_only",
+      "project": "Riverside Tower",
+      "question": "Does the company-wide payment policy allow withholding payment beyond what a project's own contract permits?",
+      "expectedSpecialists": [
+        "contract"
+      ],
+      "hints": [
+        "no — the project contract controls",
+        "policy does not independently authorize withholding"
+      ]
+    },
+    {
+      "id": "compound-053",
+      "type": "compound",
+      "project": "Harbor Point Logistics Center",
+      "question": "Is the Zone A contractor owed payment for the drywall milestone, and according to the contract, can the client withhold payment because inspection photos are missing?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone A",
+        "status": "completed",
+        "amountDue": 42000,
+        "totalPaid": 16800,
+        "amountOwed": 25200,
+        "missingPhotos": true
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 45 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": true
+    },
+    {
+      "id": "compound-054",
+      "type": "compound",
+      "project": "Harbor Point Logistics Center",
+      "question": "Given the progress logs and payment records for drywall in Zone A, is the client currently justified in withholding payment under the contract?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone A",
+        "status": "completed",
+        "amountDue": 42000,
+        "totalPaid": 16800,
+        "amountOwed": 25200,
+        "missingPhotos": true
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 45 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": true
+    },
+    {
+      "id": "compound-055",
+      "type": "compound",
+      "project": "Harbor Point Logistics Center",
+      "question": "Is the Zone B contractor owed payment for the drywall milestone, and according to the contract, can the client withhold payment because inspection photos are missing?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone B",
+        "status": "paid",
+        "amountDue": 42000,
+        "totalPaid": 42000,
+        "amountOwed": 0,
+        "missingPhotos": true
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 45 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": false
+    },
+    {
+      "id": "compound-056",
+      "type": "compound",
+      "project": "Harbor Point Logistics Center",
+      "question": "Given the progress logs and payment records for drywall in Zone B, is the client currently justified in withholding payment under the contract?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone B",
+        "status": "paid",
+        "amountDue": 42000,
+        "totalPaid": 42000,
+        "amountOwed": 0,
+        "missingPhotos": true
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 45 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": false
+    },
+    {
+      "id": "compound-057",
+      "type": "compound",
+      "project": "Harbor Point Logistics Center",
+      "question": "Is the Zone C contractor owed payment for the drywall milestone, and according to the contract, can the client withhold payment because inspection photos are missing?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone C",
+        "status": "paid",
+        "amountDue": 42000,
+        "totalPaid": 42000,
+        "amountOwed": 0,
+        "missingPhotos": false
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 45 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": false
+    },
+    {
+      "id": "compound-058",
+      "type": "compound",
+      "project": "Harbor Point Logistics Center",
+      "question": "Given the progress logs and payment records for drywall in Zone C, is the client currently justified in withholding payment under the contract?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone C",
+        "status": "paid",
+        "amountDue": 42000,
+        "totalPaid": 42000,
+        "amountOwed": 0,
+        "missingPhotos": false
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 45 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": false
+    },
+    {
+      "id": "compound-059",
+      "type": "compound",
+      "project": "Riverside Tower",
+      "question": "Is the Zone 1 contractor owed payment for the drywall milestone, and according to the contract, can the client withhold payment because inspection photos are missing?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 1",
+        "status": "paid",
+        "amountDue": 42000,
+        "totalPaid": 42000,
+        "amountOwed": 0,
+        "missingPhotos": true
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 30 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": false
+    },
+    {
+      "id": "compound-060",
+      "type": "compound",
+      "project": "Riverside Tower",
+      "question": "Given the progress logs and payment records for drywall in Zone 1, is the client currently justified in withholding payment under the contract?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 1",
+        "status": "paid",
+        "amountDue": 42000,
+        "totalPaid": 42000,
+        "amountOwed": 0,
+        "missingPhotos": true
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 30 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": false
+    },
+    {
+      "id": "compound-061",
+      "type": "compound",
+      "project": "Riverside Tower",
+      "question": "Is the Zone 2 contractor owed payment for the drywall milestone, and according to the contract, can the client withhold payment because inspection photos are missing?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 2",
+        "status": "paid",
+        "amountDue": 42000,
+        "totalPaid": 42000,
+        "amountOwed": 0,
+        "missingPhotos": false
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 30 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": false
+    },
+    {
+      "id": "compound-062",
+      "type": "compound",
+      "project": "Riverside Tower",
+      "question": "Given the progress logs and payment records for drywall in Zone 2, is the client currently justified in withholding payment under the contract?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 2",
+        "status": "paid",
+        "amountDue": 42000,
+        "totalPaid": 42000,
+        "amountOwed": 0,
+        "missingPhotos": false
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 30 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": false
+    },
+    {
+      "id": "compound-063",
+      "type": "compound",
+      "project": "Riverside Tower",
+      "question": "Is the Zone 3 contractor owed payment for the drywall milestone, and according to the contract, can the client withhold payment because inspection photos are missing?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 3",
+        "status": "completed",
+        "amountDue": 42000,
+        "totalPaid": 0,
+        "amountOwed": 42000,
+        "missingPhotos": true
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 30 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": true
+    },
+    {
+      "id": "compound-064",
+      "type": "compound",
+      "project": "Riverside Tower",
+      "question": "Given the progress logs and payment records for drywall in Zone 3, is the client currently justified in withholding payment under the contract?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 3",
+        "status": "completed",
+        "amountDue": 42000,
+        "totalPaid": 0,
+        "amountOwed": 42000,
+        "missingPhotos": true
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 30 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": true
+    },
+    {
+      "id": "compound-065",
+      "type": "compound",
+      "project": "Riverside Tower",
+      "question": "Is the Zone 4 contractor owed payment for the drywall milestone, and according to the contract, can the client withhold payment because inspection photos are missing?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 4",
+        "status": "completed",
+        "amountDue": 42000,
+        "totalPaid": 16800,
+        "amountOwed": 25200,
+        "missingPhotos": true
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 30 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": true
+    },
+    {
+      "id": "compound-066",
+      "type": "compound",
+      "project": "Riverside Tower",
+      "question": "Given the progress logs and payment records for drywall in Zone 4, is the client currently justified in withholding payment under the contract?",
+      "expectedSpecialists": [
+        "payment",
+        "contract",
+        "progress"
+      ],
+      "facts": {
+        "zoneLabel": "Zone 4",
+        "status": "completed",
+        "amountDue": 42000,
+        "totalPaid": 16800,
+        "amountOwed": 25200,
+        "missingPhotos": true
+      },
+      "hints": [
+        "Article 4.2 permits withholding for up to 30 calendar days from completion",
+        "never state that withholding \"is legally valid\" — only what the contract permits"
+      ],
+      "expectedConflict": true
+    }
+  ],
+  "generated_at": "2026-09-06T12:08:06.892Z"
+}

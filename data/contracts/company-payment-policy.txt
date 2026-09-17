@@ -1,0 +1,36 @@
+COMPANY-WIDE PAYMENT TERMS & RETAINAGE POLICY
+Applies to all active projects unless superseded by a project-specific
+Master Construction Contract.
+
+This dataset is synthetic and generated to reproduce realistic cross-system
+retrieval challenges. It is not derived from any real client engagement.
+
+1. RETAINAGE
+
+1.1 A retainage of five percent (5%) is withheld from every milestone
+payment across all projects and released upon Final Finish milestone
+acceptance for the applicable zone.
+
+2. PAYMENT METHODS
+
+2.1 Payments are made by ACH transfer or company check, at the Client's
+discretion, within the timeframe specified in the applicable project's
+Master Construction Contract.
+
+3. DISPUTED OR WITHHELD PAYMENTS
+
+3.1 Where a project-specific contract permits withholding payment pending
+inspection verification (see each project's Article 4), that provision
+controls over this policy. This policy does not independently authorize
+withholding beyond what the project contract states.
+
+3.2 Any amount withheld must be tracked against the specific milestone it
+relates to; withholding on one milestone does not affect payment due on
+other, unrelated milestones in the same zone or project.
+
+4. LATE PAYMENT
+
+4.1 Amounts not disputed and not subject to a withholding provision that
+remain unpaid more than thirty (30) calendar days past the due date accrue
+interest at the rate specified in the applicable Master Construction
+Contract, or 1% per month if none is specified.

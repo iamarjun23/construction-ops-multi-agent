@@ -1,0 +1,11 @@
+node_modules
+web/node_modules
+web/dist
+dist
+.env
+.env.*
+!.env.example
+*.log
+.git
+eval/results
+eval/report.md
