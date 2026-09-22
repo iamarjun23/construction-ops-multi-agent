@@ -1,6 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { askQuestion, fetchContext, type ContextProject, type ContextUser, type Evidence, type TraceStep } from './api';
 
+/** The answer text uses **bold** section headers; render those without pulling in a markdown library. */
+function renderAnswer(text: string) {
+  return text.split('\n\n').map((para, i) => {
+    const parts = para.split(/\*\*(.+?)\*\*/g);
+    return (
+      <p key={i}>
+        {parts.map((part, j) => (j % 2 === 1 ? <strong key={j}>{part}</strong> : part))}
+      </p>
+    );
+  });
+}
+
 const FLAGSHIP_QUESTIONS = [
   'Is the Zone 3 contractor owed payment for the drywall milestone, and according to the contract, can the client withhold payment because inspection photos are missing?',
   'Does Meridian Development owe money for the Zone 3 drywall work, and is it allowed to hold back payment since there are no inspection photos?',
@@ -67,7 +79,7 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <h1>Construction Ops Assistant</h1>
-        <p className="subtitle">Supervisor-based multi-agent RAG — payment, contract &amp; progress questions</p>
+        <p className="subtitle">One answer, three sources reconciled — payments, contract terms &amp; site progress</p>
       </header>
 
       <div className="controls">
@@ -123,7 +135,7 @@ export default function App() {
           <h2>Answer</h2>
           {!answer && !asking && <p className="empty">Ask a question to see the answer here.</p>}
           {asking && !answer && <p className="empty">Working…</p>}
-          {answer && <p className="answer-text">{answer}</p>}
+          {answer && <div className="answer-text">{renderAnswer(answer)}</div>}
 
           {evidence.length > 0 && (
             <>

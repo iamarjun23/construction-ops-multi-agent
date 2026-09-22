@@ -63,20 +63,5 @@ one zone gets zero rows for another zone regardless of how the tool is
 called (explicit zone filter, no filter at all, milestone-name-only); see
 `tests/access-control.test.ts` for the automated proof. Evidence returned
 from every tool carries a `sourceId`, `sourceType` (`row` | `chunk`), and a
-`specialist` tag, so the final answer — and the eval harness — can trace
-every cited fact back to where it came from.
-
-## Why three eval conditions, not one
-
-`eval/run-eval.ts` runs every question through:
-
-1. **Plain RAG** (`src/rag/plain-rag.ts`) — one vector search, one
-   generation. Can only ever answer the contract half of a compound
-   question, by construction.
-2. **Single-agent** (`src/rag/single-agent-baseline.ts`) — one agent, all
-   three tools, a real multi-turn tool-use loop. This is the number the
-   multi-agent system has to beat.
-3. **Multi-agent** — Supervisor + specialists + Audit, as diagrammed above.
-
-See [`trade-offs.md`](./trade-offs.md) for what that comparison is
-expected to show and why, and the README for how to run it yourself.
+`specialist` tag, so the final answer can trace every cited fact back to
+where it came from.
